@@ -89,23 +89,31 @@ app.get('/rooms', (req,res)=>{
 });
 
 ////Booking room
-app.post('/bookingroom', (req,res)=>{
-  try{
+app.post('/bookingroom', (req, res) => {
+  try {
+    const newBooking = req.body;
 
-    if(booking.date !== booking.date && booking.starttime !== booking.starttime && booking.endtime !== booking.endtime){
-    booking.push(req.body)
-    res.send(booking)
-    console.log("Room booked successfully");
+    const isbooked = booking.some(bookingInfo =>
+      bookingInfo.roomId === newBooking.roomId &&
+      bookingInfo.dateOfBooking === newBooking.dateOfBooking &&
+      bookingInfo.starttime === newBooking.starttime &&
+      bookingInfo.endtime === newBooking.endtime
+    );
+
+    if (isbooked) {
+      res.status(400).send("The room is already booked for the same date and time.");
+    } else {
+      booking.push(newBooking);
+      res.send(newBooking);
+      console.log("Room booked successfully");
     }
-    else{
-      res.status(400).send("the room is already booked on the date and time")
-    }
-  }
-  catch{
-    console.log(err);
+  } catch (err) {
+    console.error(err);
     res.status(500).send('Internal Server Error');
-  } 
+  }
 });
+
+
 
 app.get('/bookingroom', (req,res)=>{
   try{
@@ -174,9 +182,11 @@ app.get('/customerbookings', (req, res) => {
       const existingEntry = acc.find((entry) => entry.customerName === customerName && entry.roomName === roomName);
 
       if (existingEntry) {
-        existingEntry.bookingIds.push(bookingInfo.bookingId);
-        existingEntry.bookingDates.push(bookingInfo.dateOfBooking);
-        existingEntry.bookingstatus.push(bookedStatus);
+        existingEntry.bookingIds.push(bookingInfo.bookingId),
+        existingEntry.bookingDates.push(bookingInfo.dateOfBooking),
+        existingEntry.bookingstatus.push(bookedStatus),
+        existingEntry.startedTime.push(bookingInfo.starttime),
+        existingEntry.endedTime.push(bookingInfo.endtime),
         existingEntry.count += 1;
       } else {
         acc.push({
@@ -184,6 +194,8 @@ app.get('/customerbookings', (req, res) => {
           roomName,
           bookingIds: [bookingInfo.bookingId],
           bookingDates: [bookingInfo.dateOfBooking],
+          startedTime:[bookingInfo.starttime],
+          endedTime:[bookingInfo.endtime],
           bookingstatus: [bookedStatus],
           count: 1,
         });
